@@ -69,6 +69,7 @@ enum class RequestPriority;
 enum class RequestRedirect;
 enum class ResizeObserverBoxOptions;
 enum class ResponseType;
+enum class TextTrackKind;
 enum class XMLHttpRequestResponseType;
 }
 
@@ -467,6 +468,7 @@ class SharedImageRequest;
 class Storage;
 class SubmitEvent;
 class TextMetrics;
+class TextTrack;
 class Timer;
 class TimeRanges;
 class ToggleEvent;
