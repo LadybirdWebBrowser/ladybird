@@ -25,7 +25,8 @@
       "platform": "linux | freebsd | openbsd"
     },
     "sqlite3",
-    "woff2"
+    "woff2",
+    "wolfssl"
   ],
   "overrides": [
     {
@@ -55,6 +56,10 @@
     {
       "name": "woff2",
       "version": "1.0.2#4"
+    },
+    {
+      "name": "wolfssl",
+      "version": "5.7.0#1"
     }
   ]
 }
