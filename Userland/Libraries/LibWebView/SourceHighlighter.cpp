@@ -85,6 +85,8 @@ String highlight_source(URL::URL const& url, StringView source)
             append_source(token->end_position().byte_offset);
         }
     }
+    // Character tokens have an `m_end_position` of `{ 0 }`, so we should append the remainder of the source.
+    append_source(source.length());
 
     builder.append(R"~~~(
 </pre>
