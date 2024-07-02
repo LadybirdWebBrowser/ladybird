@@ -16,6 +16,7 @@
 #include <LibProtocol/Request.h>
 #include <LibURL/URL.h>
 #include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Loader/UserAgent.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web {
@@ -99,6 +100,9 @@ public:
     String const& platform() const { return m_platform; }
     void set_platform(String platform) { m_platform = move(platform); }
 
+    NavigatorCompatibilityMode navigator_compatibility_mode() { return m_navigator_compatibility_mode; }
+    void set_navigator_compatibility_mode(NavigatorCompatibilityMode mode) { m_navigator_compatibility_mode = mode; }
+
     void clear_cache();
     void evict_from_cache(LoadRequest const&);
 
@@ -116,6 +120,7 @@ private:
     NonnullRefPtr<ResourceLoaderConnector> m_connector;
     String m_user_agent;
     String m_platform;
+    NavigatorCompatibilityMode m_navigator_compatibility_mode;
     Optional<JS::GCPtr<Page>> m_page {};
 };
 
