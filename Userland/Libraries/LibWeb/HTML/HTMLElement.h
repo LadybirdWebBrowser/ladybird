@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
+#include <LibWeb/HTML/ToggleTaskTracker.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
 
 namespace Web::HTML {
@@ -77,6 +80,24 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<ElementInternals>> attach_internals();
 
+    virtual void removed_from(Node*) override;
+
+    enum class PopoverVisibilityState {
+        Hidden,
+        Showing,
+    };
+    PopoverVisibilityState popover_visibility_state() const { return m_popover_visibility_state; }
+
+    WebIDL::ExceptionOr<void> set_popover(Optional<String> value);
+    Optional<StringView> popover() const;
+
+    WebIDL::ExceptionOr<void> show_popover_for_bindings();
+    WebIDL::ExceptionOr<void> hide_popover_for_bindings();
+    WebIDL::ExceptionOr<bool> toggle_popover(Optional<bool> force);
+
+    WebIDL::ExceptionOr<void> show_popover(bool throw_exceptions, JS::GCPtr<HTMLElement> invoker);
+    WebIDL::ExceptionOr<void> hide_popover(bool focus_previous_element, bool fire_events, bool throw_exceptions);
+
 protected:
     HTMLElement(DOM::Document&, DOM::QualifiedName);
 
@@ -94,6 +115,10 @@ private:
     virtual void did_receive_focus() override;
 
     [[nodiscard]] String get_the_text_steps();
+
+    WebIDL::ExceptionOr<bool> check_popover_validity(bool expected_to_be_showing, bool throw_exception, JS::GCPtr<DOM::Document>);
+
+    void queue_a_popover_toggle_event_task(String old_state, String new_state);
 
     JS::GCPtr<DOMStringMap> m_dataset;
 
@@ -114,6 +139,23 @@ private:
 
     // https://html.spec.whatwg.org/multipage/interaction.html#click-in-progress-flag
     bool m_click_in_progress { false };
+
+    // Popover API
+
+    // https://html.spec.whatwg.org/multipage/popover.html#popover-visibility-state
+    PopoverVisibilityState m_popover_visibility_state { PopoverVisibilityState::Hidden };
+
+    // https://html.spec.whatwg.org/multipage/popover.html#popover-invoker
+    JS::GCPtr<HTMLElement> m_popover_invoker;
+
+    // https://html.spec.whatwg.org/multipage/popover.html#popover-showing-or-hiding
+    bool m_popover_showing_or_hiding { false };
+
+    // https://html.spec.whatwg.org/multipage/popover.html#popover-close-watcher
+    JS::GCPtr<CloseWatcher> m_popover_close_watcher;
+
+    // https://html.spec.whatwg.org/multipage/popover.html#the-popover-attribute:toggle-task-tracker
+    Optional<ToggleTaskTracker> m_popover_toggle_task_tracker;
 };
 
 }
