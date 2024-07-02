@@ -849,10 +849,9 @@ void FormattingContext::compute_width_for_absolutely_positioned_replaced_element
     // but the rest of section 10.3.7 is replaced by the following rules:
 
     // 1. The used value of 'width' is determined as for inline replaced elements.
-    if (is<ReplacedBox>(box)) {
+    if (box_is_sized_as_replaced_element(box))
         // FIXME: This const_cast is gross.
-        static_cast<ReplacedBox&>(const_cast<Box&>(box)).prepare_for_replaced_layout();
-    }
+        const_cast<Layout::Box&>(box).prepare_for_replaced_layout();
 
     auto width = compute_width_for_replaced_element(box, available_space);
     auto width_of_containing_block = available_space.width.to_px_or_zero();
@@ -1993,6 +1992,9 @@ CSSPixelRect FormattingContext::margin_box_rect_in_ancestor_coordinate_space(Box
 
 bool box_is_sized_as_replaced_element(Box const& box)
 {
+    if (box.dom_node() && box.dom_node()->is_html_input_element())
+        return true;
+
     // When a box has a preferred aspect ratio, its automatic sizes are calculated the same as for a
     // replaced element with a natural aspect ratio and no natural size in that axis, see e.g. CSS2 §10
     // and CSS Flexible Box Model Level 1 §9.2.

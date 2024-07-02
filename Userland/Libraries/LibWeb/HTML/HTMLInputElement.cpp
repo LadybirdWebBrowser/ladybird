@@ -122,11 +122,6 @@ void HTMLInputElement::adjust_computed_style(CSS::StyleProperties& style)
     //         This is required for the internal shadow tree to work correctly in layout.
     if (style.display().is_inline_outside() && style.display().is_flow_inside())
         style.set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
-
-    if (type_state() != TypeAttributeState::FileUpload) {
-        if (style.property(CSS::PropertyID::Width)->has_auto())
-            style.set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length(size(), CSS::Length::Type::Ch)));
-    }
 }
 
 void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)
@@ -787,7 +782,6 @@ void HTMLInputElement::create_text_input_shadow_tree()
         align-items: center;
         white-space: pre;
         border: none;
-        padding: 1px 2px;
     )~~~"_string));
     MUST(shadow_root->append_child(element));
 
