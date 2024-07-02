@@ -53,6 +53,7 @@ color: rgb(0, 0, 0)
 column-count: auto
 column-gap: auto
 content: normal
+content-visibility: visible
 cursor: auto
 cx: 0px
 cy: 0px
@@ -85,7 +86,7 @@ grid-row-start: auto
 grid-template-areas: 
 grid-template-columns: 
 grid-template-rows: 
-height: 1479px
+height: 1496px
 image-rendering: auto
 inline-size: auto
 inset-block-end: auto
