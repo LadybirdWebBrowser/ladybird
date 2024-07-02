@@ -5111,65 +5111,13 @@ void Document::set_needs_to_refresh_scroll_state(bool b)
 
 Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query, CaseSensitivity case_sensitivity)
 {
-    if (!document_element() || !document_element()->layout_node())
+    if (!layout_node())
         return {};
-
-    struct TextPosition {
-        DOM::Text& dom_node;
-        size_t start_offset { 0 };
-    };
-
-    struct TextBlock {
-        String text;
-        Vector<TextPosition> positions;
-    };
-
-    auto gather_text_blocks = [&]() -> Vector<TextBlock> {
-        StringBuilder builder;
-        size_t current_start_position = 0;
-        Vector<TextPosition> text_positions;
-        Vector<TextBlock> text_blocks;
-        document_element()->layout_node()->for_each_in_inclusive_subtree([&](auto const& layout_node) {
-            if (layout_node.display().is_none() || !layout_node.paintable() || !layout_node.paintable()->is_visible())
-                return TraversalDecision::Continue;
-
-            if (layout_node.is_block_container()) {
-                if (!builder.is_empty()) {
-                    text_blocks.append({ builder.to_string_without_validation(), text_positions });
-                    current_start_position = 0;
-                    text_positions.clear_with_capacity();
-                    builder.clear();
-                }
-                return TraversalDecision::Continue;
-            }
-
-            if (layout_node.is_text_node()) {
-                auto const& text_node = verify_cast<Layout::TextNode>(layout_node);
-                auto& dom_node = const_cast<DOM::Text&>(text_node.dom_node());
-                if (text_positions.is_empty()) {
-                    text_positions.empend(dom_node);
-                } else {
-                    text_positions.empend(dom_node, current_start_position);
-                }
-
-                auto const& current_node_text = text_node.text_for_rendering();
-                current_start_position += current_node_text.bytes_as_string_view().length();
-                builder.append(move(current_node_text));
-            }
-
-            return TraversalDecision::Continue;
-        });
-
-        if (!builder.is_empty())
-            text_blocks.append({ builder.to_string_without_validation(), text_positions });
-
-        return text_blocks;
-    };
 
     // Ensure the layout tree exists before searching for text matches.
     update_layout();
 
-    auto text_blocks = gather_text_blocks();
+    auto const& text_blocks = layout_node()->text_blocks();
     if (text_blocks.is_empty())
         return {};
 
@@ -5189,10 +5137,8 @@ Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query,
             for (; i < text_block.positions.size() - 1 && match_index.value() > text_block.positions[i + 1].start_offset; ++i)
                 match_start_position = &text_block.positions[i + 1];
 
-            auto range = create_range();
             auto start_position = match_index.value() - match_start_position->start_offset;
             auto& start_dom_node = match_start_position->dom_node;
-            (void)range->set_start(start_dom_node, start_position);
 
             auto* match_end_position = match_start_position;
             for (; i < text_block.positions.size() - 1 && (match_index.value() + query.bytes_as_string_view().length() > text_block.positions[i + 1].start_offset); ++i)
@@ -5200,9 +5146,8 @@ Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query,
 
             auto& end_dom_node = match_end_position->dom_node;
             auto end_position = match_index.value() + query.bytes_as_string_view().length() - match_end_position->start_offset;
-            (void)range->set_end(end_dom_node, end_position);
 
-            matches.append(range);
+            matches.append(Range::create(start_dom_node, start_position, end_dom_node, end_position));
             match_start_position = match_end_position;
             offset = match_index.value() + query.bytes_as_string_view().length() + 1;
             if (offset >= text.bytes_as_string_view().length())
